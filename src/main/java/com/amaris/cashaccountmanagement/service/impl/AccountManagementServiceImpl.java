@@ -24,12 +24,12 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class AccountManagementServiceImpl implements IAccountManagementService {
 
-	private final WebClient fabrickClient;
+	private final WebClient jettyHttpClient;
 
 	@Override
 	public ResponseWrapper<ListWrapper<AccountDTO>> getAllAccounts() {
 		log.info("Calling Fabrick API for get all accounts");
-		return fabrickClient.get()
+		return jettyHttpClient.get()
 				.uri("accounts")
 				.accept(MediaType.APPLICATION_JSON)
 				.retrieve()
@@ -43,7 +43,7 @@ public class AccountManagementServiceImpl implements IAccountManagementService {
 	@SneakyThrows
 	public ResponseWrapper<AccountBalanceDTO> getAccountBalance(String accountId) {
 		log.info("Calling Fabrick API for get account balance for id: {}", accountId);
-		return fabrickClient.get()
+		return jettyHttpClient.get()
 				.uri("accounts/{accountId}/balance", accountId)
 				.accept(MediaType.APPLICATION_JSON)
 				.retrieve()
@@ -55,7 +55,7 @@ public class AccountManagementServiceImpl implements IAccountManagementService {
 	@Override
 	public ResponseWrapper<ListWrapper<TransactionDTO>> getTransactions(String accountId, String fromDate, String toDate) {
 		log.info("Calling Fabrick API for get all transaction for id: {}", accountId);
-		return fabrickClient.get()
+		return jettyHttpClient.get()
 				.uri(uriBuilder -> uriBuilder
 						.path("accounts/{accountId}/transactions")
 						.queryParam("fromAccountingDate", fromDate)
@@ -71,7 +71,7 @@ public class AccountManagementServiceImpl implements IAccountManagementService {
 	@Override
 	public ResponseWrapper<TransferResponseDTO> transfer(String accountId, TransferRequestDTO transferRequest) {
 		log.info("Calling Fabrick API for making a transfer from account: {}", accountId);
-		return fabrickClient.post()
+		return jettyHttpClient.post()
 				.uri("accounts/{accountId}/payments/money-transfers", accountId)
 				.body(Mono.just(transferRequest), TransferRequestDTO.class)
 				.accept(MediaType.APPLICATION_JSON)
