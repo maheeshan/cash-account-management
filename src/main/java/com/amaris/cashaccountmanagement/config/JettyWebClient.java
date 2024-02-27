@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpClientTransport;
@@ -61,6 +62,7 @@ public class JettyWebClient {
 
 	private Request enhance(Request inboundRequest) {
 		var accessRecordDTOBuilder = ApiAccessRecordDTO.builder();
+		AtomicReference<String> responseBodyString = new AtomicReference<>();
 		// Request Logging
 		inboundRequest.onRequestBegin(request -> {
 					try {
@@ -83,14 +85,12 @@ public class JettyWebClient {
 				.responseCode(String.valueOf(response.getStatus()))
 
 		);
-		inboundRequest.onResponseContent(((response, content) -> {
-			var bufferAsString = StandardCharsets.UTF_8.decode(content).toString();
-			accessRecordDTOBuilder
-					.responseBody(bufferAsString);
-		}));
+		inboundRequest.onResponseContent(((response, content) -> responseBodyString.set(StandardCharsets.UTF_8.decode(content).toString())));
 
-		inboundRequest.onComplete(request -> apiLoggingService.logAccess(accessRecordDTOBuilder.build()));
-		//		apiLoggingService.logAccess();
+		inboundRequest.onComplete(result -> {
+			accessRecordDTOBuilder.responseBody(responseBodyString.get());
+			apiLoggingService.logAccess(accessRecordDTOBuilder.build());
+		});
 		// Return original request
 		return inboundRequest;
 	}

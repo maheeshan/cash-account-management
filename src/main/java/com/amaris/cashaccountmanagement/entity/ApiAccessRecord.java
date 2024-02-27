@@ -30,6 +30,7 @@ public class ApiAccessRecord {
 	private String httpMethod;
 	private String endpoint;
 	private String clientIp;
+	@Lob
 	private String requestBody;
 	private String responseCode;
 	@Lob
